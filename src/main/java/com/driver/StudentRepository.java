@@ -8,64 +8,65 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
-public class StudentRepository {
-    Map<String,Student> studentDB = new HashMap<>();
-    Map<String,Teacher> teacherDB = new HashMap<>();
-    Map<String, List<String>> studentTeacherPair = new HashMap<>();
+public class StudentRepository{
+    Map<String, Student> studentMap = new HashMap<>();
+    Map<String, Teacher> teacherMap = new HashMap<>();
+    Map<String, List<String>> teacherStudentMap = new HashMap<>();
     public void addStudent(Student student) {
-        studentDB.put(student.getName(), student);
+        studentMap.put(student.getName(), student);
     }
 
     public void addTeacher(Teacher teacher) {
-        teacherDB.put(teacher.getName(), teacher);
+        teacherMap.put(teacher.getName(), teacher);
     }
 
     public void addStudentTeacherPair(String student, String teacher) {
+        if(!teacherStudentMap.containsKey(teacher))
+            teacherStudentMap.put(teacher, new ArrayList<>());
 
-        if(!studentTeacherPair.containsKey(teacher)){
-            List<String> temp = new ArrayList<>();
-            temp.add(student);
-            studentTeacherPair.put(teacher,temp);
-        }
-        else{
-            List<String> temp = studentTeacherPair.get(teacher);
-            temp.add(student);
-            studentTeacherPair.put(teacher,temp);
-        }
+        List<String> studentList = teacherStudentMap.get(teacher);
+        studentList.add(student);
+
+        Teacher teacher1 = teacherMap.get(teacher);
+        teacher1.setNumberOfStudents(studentList.size());
+
+        teacherStudentMap.put(teacher, studentList);
     }
 
     public Student getStudentByName(String name) {
-        if(!studentDB.containsKey(name))return null;
-        return studentDB.get(name);
+        if(studentMap.containsKey(name))
+            return studentMap.get(name);
+        return null;
     }
 
     public Teacher getTeacherByName(String name) {
-        if(!teacherDB.containsKey(name))return null;
-        return teacherDB.get(name);
+        if(teacherMap.containsKey(name))
+            return teacherMap.get(name);
+        return null;
     }
 
     public List<String> getStudentsByTeacherName(String teacher) {
-        if(!studentTeacherPair.containsKey(teacher))return new ArrayList<>();
-        return studentTeacherPair.get(teacher);
+        if(teacherStudentMap.containsKey(teacher))
+            return teacherStudentMap.get(teacher);
+        return new ArrayList<>();
     }
 
     public List<String> getAllStudents() {
-        List<String> list = new ArrayList<>(studentDB.keySet());
-
-        return list;
+        return new ArrayList<>(studentMap.keySet());
     }
 
     public void deleteTeacherByName(String teacher) {
-        teacherDB.remove(teacher);
-        studentTeacherPair.remove(teacher);
+        teacherMap.remove(teacher);
+        List<String> students = teacherStudentMap.get(teacher);
+        teacherStudentMap.remove(teacher);
+        for(String student : students){
+            studentMap.remove(student);
+        }
     }
 
     public void deleteAllTeachers() {
-        for(String key :teacherDB.keySet()){
-            teacherDB.remove(key);
-        }
-        for(String key : studentTeacherPair.keySet()){
-            studentTeacherPair.remove(key);
+        for(String teacher : teacherMap.keySet()){
+            deleteTeacherByName(teacher);
         }
     }
 }
